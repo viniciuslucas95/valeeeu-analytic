@@ -14,6 +14,7 @@ export class PcDiskService extends BaseService {
 
   async createAsync(data: IPcDiskDto[]) {
     data.forEach(({ filesystem, free, mountedOn, total }) => {
+      if (!filesystem || !mountedOn) return;
       this.validateCharacter(filesystem);
       this.validateCharacter(mountedOn);
       this.validatePositiveValue(free);

@@ -14,6 +14,7 @@ export class PcProcessService extends BaseService {
 
   async createAsync(data: IPcProcessDto[]) {
     data.forEach(({ name, cpuUsagePercentage, memoryUsagePercentage }) => {
+      if (!name) return;
       this.validateCharacter(name);
       this.validateUsagePercentage(cpuUsagePercentage);
       this.validateUsagePercentage(memoryUsagePercentage);

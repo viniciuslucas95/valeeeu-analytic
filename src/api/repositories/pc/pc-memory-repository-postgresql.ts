@@ -1,5 +1,4 @@
 import { DatabaseConnection } from '../../data-types/types';
-import { IPcMemoryDto } from '../../entities/dtos/pc';
 import { PcMemory } from '../../entities/models/pc';
 import { BaseRepositoryPostgresql } from '../base-repository-postgresql';
 import {
@@ -30,28 +29,14 @@ export class PcMemoryRepositoryPostgresql
   }
 
   async getAsync(id: string): Promise<IPcMemorySingleResultDto | undefined> {
-    const query = `SELECT total, free, created_at FROM ${this.tableName} WHERE id = $1 LIMIT 1;`;
+    const query = `SELECT total, free, created_at as "createdAt" FROM ${this.tableName} WHERE id = $1 LIMIT 1;`;
     const { rows } = await this.connection.query(query, [id]);
-    const result = rows[0];
-    return result
-      ? {
-          total: result.total,
-          free: result.free,
-          createdAt: result.created_at,
-        }
-      : undefined;
+    return rows[0] ?? undefined;
   }
 
   async getAllAsync(): Promise<IPcMemoryMultipleResultsDto[]> {
-    const query = `SELECT id, total, free, created_at FROM ${this.tableName};`;
+    const query = `SELECT id, total, free, created_at as "createdAt" FROM ${this.tableName};`;
     const { rows } = await this.connection.query(query);
-    return rows.map((row) => {
-      return {
-        id: row.id,
-        total: row.total,
-        free: row.free,
-        createdAt: row.created_at,
-      };
-    });
+    return rows;
   }
 }

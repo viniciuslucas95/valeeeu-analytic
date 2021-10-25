@@ -35,26 +35,14 @@ export class PcCpuRepositoryPostgresql
   }
 
   async getAsync(id: string): Promise<IPcCpuSingleResultDto | undefined> {
-    const query = `SELECT usage_percentage, created_at FROM ${this.tableName} WHERE id = $1 LIMIT 1;`;
+    const query = `SELECT usage_percentage, created_at as "createdAt" FROM ${this.tableName} WHERE id = $1 LIMIT 1;`;
     const { rows } = await this.connection.query(query, [id]);
-    const result = rows[0];
-    return result
-      ? {
-          usagePercentage: result.usage_percentage,
-          createdAt: result.created_at,
-        }
-      : undefined;
+    return rows[0] ?? undefined;
   }
 
   async getAllAsync(): Promise<IPcCpuMultipleResultsDto[]> {
-    const query = `SELECT id, usage_percentage, created_at FROM ${this.tableName};`;
+    const query = `SELECT id, usage_percentage, created_at as "createdAt" FROM ${this.tableName};`;
     const { rows } = await this.connection.query(query);
-    return rows.map((row) => {
-      return {
-        id: row.id,
-        usagePercentage: row.usage_percentage,
-        createdAt: row.created_at,
-      };
-    });
+    return rows;
   }
 }
