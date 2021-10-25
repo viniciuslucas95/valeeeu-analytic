@@ -1,1 +1,1 @@
-export { PcStatisticProvider } from './pc-statistic-provider';
+export { PoolProvider } from './pool-provider';

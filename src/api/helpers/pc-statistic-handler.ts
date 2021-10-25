@@ -32,45 +32,43 @@ interface IPcStatistics {
 
 const execAsync = promisify(exec);
 
-export class PcStatisticService {
-  async getPcStatisticsAsync(): Promise<IPcStatistics | undefined> {
-    try {
-      const { stdout: stdoutProcesses } = await execAsync('top -b -n 1');
-      const processRows = stdoutProcesses.split('\n');
-      const memoryRow = processRows[3];
-      const cpuRow = processRows[2];
-      const processes: IProcessStatistic[] = [];
-      for (let i = 7; i < processRows.length - 1; i++) {
-        const process = this.formatProcessRow(processRows[i]);
-        processes.push(process);
-      }
-      const cpuStatistics = this.formatCpuRow(cpuRow);
-      const memoryStatistics = this.formatMemoryRow(memoryRow);
-      const { stdout: stdoutDisks } = await execAsync('df -h');
-      const diskRows = stdoutDisks.split('\n');
-      const disks: IDiskStatistic[] = [];
-      for (let i = 1; i < diskRows.length - 1; i++) {
-        const disk = this.formatDiskRow(diskRows[i]);
-        disks.push(disk);
-      }
-      return {
-        cpu: cpuStatistics,
-        memory: memoryStatistics,
-        processes,
-        disks,
-      };
-    } catch (err) {
-      console.error(err);
+export class PcStatisticHandler {
+  static async getPcStatisticsAsync(): Promise<IPcStatistics> {
+    const { stdout: stdoutProcesses } = await execAsync('top -b -n 1');
+    const processRows = stdoutProcesses.split('\n');
+    const memoryRow = processRows[3];
+    const cpuRow = processRows[2];
+    const processes: IProcessStatistic[] = [];
+    for (let i = 7; i < processRows.length - 1; i++) {
+      const process = this.formatProcessRow(processRows[i]);
+      processes.push(process);
     }
-  }
-
-  private formatCpuRow(row: string): ICpuStatistic {
+    const cpuStatistics = this.formatCpuRow(cpuRow);
+    const memoryStatistics = this.formatMemoryRow(memoryRow);
+    const { stdout: stdoutDisks } = await execAsync('df -h');
+    const diskRows = stdoutDisks.split('\n');
+    const disks: IDiskStatistic[] = [];
+    for (let i = 1; i < diskRows.length - 1; i++) {
+      const disk = this.formatDiskRow(diskRows[i]);
+      disks.push(disk);
+    }
     return {
-      usagePercentage: parseFloat(row.split(', ')[3].replace(/\sid/gm, '')),
+      cpu: cpuStatistics,
+      memory: memoryStatistics,
+      processes,
+      disks,
     };
   }
 
-  private formatMemoryRow(row: string): IMemoryStatistic {
+  private static formatCpuRow(row: string): ICpuStatistic {
+    return {
+      usagePercentage: parseFloat(
+        (100 - parseFloat(row.split(', ')[3].replace(/\sid/gm, ''))).toFixed(2)
+      ),
+    };
+  }
+
+  private static formatMemoryRow(row: string): IMemoryStatistic {
     const columns = row.split(':  ')[1].split(', ');
     const totalColumn = columns[0];
     const freeColumn = columns[1];
@@ -82,7 +80,7 @@ export class PcStatisticService {
     };
   }
 
-  private formatProcessRow(row: string): IProcessStatistic {
+  private static formatProcessRow(row: string): IProcessStatistic {
     const columns = row.replace(/(\s+)/gm, '-').split('-');
     const cpuUsagePercentage = parseFloat(columns[9]);
     const memoryUsagePercentage = parseFloat(columns[10]);
@@ -94,7 +92,7 @@ export class PcStatisticService {
     };
   }
 
-  private formatDiskRow(row: string): IDiskStatistic {
+  private static formatDiskRow(row: string): IDiskStatistic {
     const columns = row.replace(/(\s+)/gm, '-').split('-');
     const filesystem = columns[0];
     const total = parseFloat(columns[1].replace('G', '000'));
